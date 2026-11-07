@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.Map;
 
@@ -57,15 +58,37 @@ public class RegistrationQueryAdapter implements OwnerExistencePort, VehicleExis
     }
 
     private Long post(String path, Object body) {
-        IdResponse response = restClient.post()
-                .uri(path)
-                .body(body)
-                .retrieve()
-                .body(IdResponse.class);
-        if (response == null || response.id() == null) {
-            throw new IllegalStateException("Registration service returned no id for " + path);
+        try {
+            IdResponse response = restClient.post()
+                    .uri(path)
+                    .body(body)
+                    .retrieve()
+                    .body(IdResponse.class);
+            if (response == null || response.id() == null) {
+                throw new IllegalStateException("Registration service returned no id for " + path);
+            }
+            return response.id();
+        } catch (RestClientResponseException exception) {
+            if (exception.getStatusCode().value() == 409) {
+                throw new RegistrationConflictException(reason(exception.getResponseBodyAsString()));
+            }
+            throw exception;
         }
-        return response.id();
+    }
+
+    private String reason(String body) {
+        try {
+            String marker = "\"reason\":\"";
+            int start = body.indexOf(marker);
+            if (start < 0) {
+                return "REGISTRATION_CONFLICT";
+            }
+            int from = start + marker.length();
+            int end = body.indexOf('"', from);
+            return end < 0 ? "REGISTRATION_CONFLICT" : body.substring(from, end);
+        } catch (Exception ignored) {
+            return "REGISTRATION_CONFLICT";
+        }
     }
 
     public record IdResponse(Long id) {

@@ -4,6 +4,7 @@ import br.com.fiap.postech.mspedidos.port.CatalogQueryPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.math.BigDecimal;
 
@@ -22,14 +23,21 @@ public class CatalogQueryAdapter implements CatalogQueryPort {
 
     @Override
     public CatalogServiceInfo findById(Long catalogServiceId) {
-        CatalogServiceResponse response = restClient.get()
-                .uri("/catalog/services/{id}", catalogServiceId)
-                .retrieve()
-                .body(CatalogServiceResponse.class);
-        if (response == null) {
-            throw new CatalogServiceNotFoundException(catalogServiceId);
+        try {
+            CatalogServiceResponse response = restClient.get()
+                    .uri("/catalog/services/{id}", catalogServiceId)
+                    .retrieve()
+                    .body(CatalogServiceResponse.class);
+            if (response == null) {
+                throw new CatalogServiceNotFoundException(catalogServiceId);
+            }
+            return new CatalogServiceInfo(response.id(), response.name(), response.basePrice());
+        } catch (RestClientResponseException exception) {
+            if (exception.getStatusCode().value() == 404) {
+                throw new CatalogServiceNotFoundException(catalogServiceId);
+            }
+            throw exception;
         }
-        return new CatalogServiceInfo(response.id(), response.name(), response.basePrice());
     }
 
     public record CatalogServiceResponse(Long id, String name, BigDecimal basePrice) {

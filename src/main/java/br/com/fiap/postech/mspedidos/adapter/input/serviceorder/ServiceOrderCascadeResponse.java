@@ -11,11 +11,16 @@ public record ServiceOrderCascadeResponse(
 
     public record ServiceLineResponse(
             Long id,
+            Long serviceOrderId,
             Long catalogServiceId,
             String catalogServiceName,
             BigDecimal price,
             String status,
-            Instant createdAt
+            String statusLabel,
+            Instant createdAt,
+            Instant approvedAt,
+            Instant startedAt,
+            Instant completedAt
     ) {
     }
 }

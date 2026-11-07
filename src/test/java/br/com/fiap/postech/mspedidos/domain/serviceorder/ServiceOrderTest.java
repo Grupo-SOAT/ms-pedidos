@@ -125,4 +125,30 @@ class ServiceOrderTest {
         assertThat(order.getApprovedAt()).isEqualTo(LATER);
         assertThat(order.getRejectedAt()).isEqualTo(LATER);
     }
+
+    @Test
+    void should_expose_status_labels() {
+        ServiceOrder order = ServiceOrder.create(1L, 2L, 3L, "Revisao", NOW);
+        assertThat(order.getStatusLabel()).isEqualTo("Recebida");
+        order.transitionTo(ServiceOrderStatus.IN_INSPECTION, LATER);
+        assertThat(order.getStatusLabel()).isEqualTo("Em Diagnóstico");
+        order.transitionTo(ServiceOrderStatus.AWAITING_APPROVAL, LATER);
+        assertThat(order.getStatusLabel()).isEqualTo("Aguardando Aprovação");
+        order.transitionTo(ServiceOrderStatus.APPROVED, LATER);
+        assertThat(order.getStatusLabel()).isEqualTo("Aprovada");
+    }
+
+    @Test
+    void should_update_details_partially() {
+        ServiceOrder order = ServiceOrder.create(1L, 2L, 3L, "Revisao", NOW);
+
+        order.updateDetails(9L, null, "Nova", LATER);
+        assertThat(order.getClientId()).isEqualTo(9L);
+        assertThat(order.getVehicleId()).isEqualTo(2L);
+        assertThat(order.getDescription()).isEqualTo("Nova");
+
+        order.updateDetails(null, 8L, "   ", LATER);
+        assertThat(order.getVehicleId()).isEqualTo(8L);
+        assertThat(order.getDescription()).isEqualTo("Nova");
+    }
 }

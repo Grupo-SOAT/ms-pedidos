@@ -11,8 +11,8 @@ import java.util.Objects;
 public class ServiceOrder {
 
     private Long id;
-    private final Long clientId;
-    private final Long vehicleId;
+    private Long clientId;
+    private Long vehicleId;
     private final Long branchId;
     private String description;
     private ServiceOrderStatus status;
@@ -119,6 +119,23 @@ public class ServiceOrder {
             default -> {
             }
         }
+    }
+
+    public void updateDetails(Long clientId, Long vehicleId, String description, Instant now) {
+        if (clientId != null) {
+            this.clientId = clientId;
+        }
+        if (vehicleId != null) {
+            this.vehicleId = vehicleId;
+        }
+        if (description != null && !description.isBlank()) {
+            this.description = description;
+        }
+        this.updatedAt = now;
+    }
+
+    public String getStatusLabel() {
+        return status.label();
     }
 
     public void applyEstimatedAmount(BigDecimal amount, Instant now) {

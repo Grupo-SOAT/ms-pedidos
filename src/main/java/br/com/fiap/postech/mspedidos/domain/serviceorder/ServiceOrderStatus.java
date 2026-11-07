@@ -8,15 +8,25 @@ import java.util.Set;
  */
 public enum ServiceOrderStatus {
 
-    PENDING,
-    IN_INSPECTION,
-    AWAITING_APPROVAL,
-    PARTIALLY_REJECTED,
-    CANCELLED,
-    APPROVED,
-    IN_PROGRESS,
-    COMPLETED,
-    DELIVERED;
+    PENDING("Recebida"),
+    IN_INSPECTION("Em Diagnóstico"),
+    AWAITING_APPROVAL("Aguardando Aprovação"),
+    PARTIALLY_REJECTED("Parcialmente Rejeitada"),
+    CANCELLED("Cancelada"),
+    APPROVED("Aprovada"),
+    IN_PROGRESS("Em Andamento"),
+    COMPLETED("Finalizada"),
+    DELIVERED("Entregue");
+
+    private final String label;
+
+    ServiceOrderStatus(String label) {
+        this.label = label;
+    }
+
+    public String label() {
+        return label;
+    }
 
     public boolean canTransitionTo(ServiceOrderStatus target) {
         return allowedTargets().contains(target);

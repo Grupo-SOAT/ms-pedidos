@@ -97,4 +97,34 @@ class RegistrationQueryAdapterTest {
                         "Joao", "31058167049", "CPF", "1199", "joao@email.com")))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    void should_propagate_registration_conflict_reason() {
+        server.expect(requestTo("http://localhost:8080/owners"))
+                .andRespond(withStatus(HttpStatus.CONFLICT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"reason\":\"OWNER_ALREADY_EXISTS\"}"));
+
+        assertThatThrownBy(() -> adapter.createOwner(
+                new br.com.fiap.postech.mspedidos.port.RegistrationCommandPort.OwnerData(
+                        "Joao", "31058167049", "CPF", "1199", "joao@email.com")))
+                .isInstanceOf(br.com.fiap.postech.mspedidos.adapter.output.registration
+                        .RegistrationConflictException.class)
+                .hasMessage("OWNER_ALREADY_EXISTS");
+    }
+
+    @Test
+    void should_use_generic_reason_when_conflict_body_has_no_reason() {
+        server.expect(requestTo("http://localhost:8080/owners"))
+                .andRespond(withStatus(HttpStatus.CONFLICT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{}"));
+
+        assertThatThrownBy(() -> adapter.createOwner(
+                new br.com.fiap.postech.mspedidos.port.RegistrationCommandPort.OwnerData(
+                        "Joao", "31058167049", "CPF", "1199", "joao@email.com")))
+                .isInstanceOf(br.com.fiap.postech.mspedidos.adapter.output.registration
+                        .RegistrationConflictException.class)
+                .hasMessage("REGISTRATION_CONFLICT");
+    }
 }
