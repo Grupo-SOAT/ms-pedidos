@@ -29,6 +29,13 @@ class ServiceLineQueryAdapterTest {
     }
 
     @Test
+    void should_map_lines_by_service_order_id() {
+        when(repository.findByServiceOrderId(5L)).thenReturn(List.of(entity(7L)));
+
+        assertThat(adapter.findByServiceOrderId(5L)).hasSize(1);
+    }
+
+    @Test
     void should_map_lines_by_catalog_service_id() {
         when(repository.findByCatalogServiceId(7L)).thenReturn(List.of(entity(7L)));
 

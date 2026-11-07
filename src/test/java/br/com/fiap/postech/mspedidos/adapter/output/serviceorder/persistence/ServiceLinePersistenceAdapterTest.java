@@ -50,4 +50,21 @@ class ServiceLinePersistenceAdapterTest {
 
         assertThat(adapter.findByServiceOrderId(5L)).hasSize(1);
     }
+
+    @Test
+    void should_save_find_by_id_and_delete() {
+        ServiceLineEntity entity = ServiceLineEntity.builder()
+                .id(9L).serviceOrderId(5L).catalogServiceId(3L).catalogServiceName("Oleo")
+                .price(BigDecimal.TEN).status("AWAITING_APPROVAL").createdAt(NOW).build();
+        when(repository.save(any())).thenReturn(entity);
+        when(repository.findById(9L)).thenReturn(java.util.Optional.of(entity));
+
+        ServiceLine saved = adapter.save(ServiceLine.create(5L, 3L, "Oleo", BigDecimal.TEN, NOW));
+        assertThat(saved.getId()).isEqualTo(9L);
+        assertThat(adapter.findByIdAndServiceOrderId(9L, 5L)).isPresent();
+        assertThat(adapter.findByIdAndServiceOrderId(9L, 6L)).isEmpty();
+
+        adapter.delete(saved);
+        org.mockito.Mockito.verify(repository).deleteById(9L);
+    }
 }

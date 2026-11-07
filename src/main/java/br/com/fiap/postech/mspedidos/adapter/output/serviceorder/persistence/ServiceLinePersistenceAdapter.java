@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -22,10 +23,27 @@ public class ServiceLinePersistenceAdapter implements ServiceLinePersistencePort
     }
 
     @Override
+    public ServiceLine save(ServiceLine line) {
+        return toDomain(repository.save(toEntity(line)));
+    }
+
+    @Override
     public List<ServiceLine> findByServiceOrderId(Long serviceOrderId) {
         return repository.findByServiceOrderId(serviceOrderId).stream()
                 .map(ServiceLinePersistenceAdapter::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<ServiceLine> findByIdAndServiceOrderId(Long id, Long serviceOrderId) {
+        return repository.findById(id)
+                .filter(entity -> serviceOrderId.equals(entity.getServiceOrderId()))
+                .map(ServiceLinePersistenceAdapter::toDomain);
+    }
+
+    @Override
+    public void delete(ServiceLine line) {
+        repository.deleteById(line.getId());
     }
 
     static ServiceLineEntity toEntity(ServiceLine line) {

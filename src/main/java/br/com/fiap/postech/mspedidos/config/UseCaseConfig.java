@@ -4,6 +4,9 @@ import br.com.fiap.postech.mspedidos.domain.reporting.CalculateServiceAverageTim
 import br.com.fiap.postech.mspedidos.domain.serviceorder.usecase.ChangeServiceOrderStatusUseCase;
 import br.com.fiap.postech.mspedidos.domain.serviceorder.usecase.CreateServiceOrderCascadeUseCase;
 import br.com.fiap.postech.mspedidos.domain.serviceorder.usecase.CreateServiceOrderUseCase;
+import br.com.fiap.postech.mspedidos.domain.serviceorder.usecase.RegisterProgressUseCase;
+import br.com.fiap.postech.mspedidos.domain.serviceorder.usecase.ServiceLineUseCase;
+import br.com.fiap.postech.mspedidos.domain.serviceorder.usecase.ServiceOrderQueryUseCase;
 import br.com.fiap.postech.mspedidos.port.message.ServiceOrderEventPublisherPort;
 import br.com.fiap.postech.mspedidos.port.monitoring.ServiceOrderMetricsPort;
 import br.com.fiap.postech.mspedidos.port.persistence.OwnerExistencePort;
@@ -55,6 +58,39 @@ public class UseCaseConfig {
     ) {
         return new CreateServiceOrderCascadeUseCase(createServiceOrderUseCase, registrationCommandPort,
                 catalogQueryPort, serviceLinePersistencePort, clock);
+    }
+
+    @Bean
+    public ServiceOrderQueryUseCase serviceOrderQueryUseCase(
+            ServiceOrderPersistencePort persistencePort,
+            OwnerExistencePort ownerExistencePort,
+            VehicleExistencePort vehicleExistencePort,
+            Clock clock
+    ) {
+        return new ServiceOrderQueryUseCase(persistencePort, ownerExistencePort,
+                vehicleExistencePort, clock);
+    }
+
+    @Bean
+    public ServiceLineUseCase serviceLineUseCase(
+            ServiceOrderPersistencePort serviceOrderPersistencePort,
+            ServiceLinePersistencePort serviceLinePersistencePort,
+            CatalogQueryPort catalogQueryPort,
+            Clock clock
+    ) {
+        return new ServiceLineUseCase(serviceOrderPersistencePort, serviceLinePersistencePort,
+                catalogQueryPort, clock);
+    }
+
+    @Bean
+    public RegisterProgressUseCase registerProgressUseCase(
+            ServiceOrderPersistencePort serviceOrderPersistencePort,
+            ServiceLinePersistencePort serviceLinePersistencePort,
+            ChangeServiceOrderStatusUseCase changeServiceOrderStatusUseCase,
+            Clock clock
+    ) {
+        return new RegisterProgressUseCase(serviceOrderPersistencePort, serviceLinePersistencePort,
+                changeServiceOrderStatusUseCase, clock);
     }
 
     @Bean

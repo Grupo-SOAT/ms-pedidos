@@ -76,4 +76,20 @@ class ServiceOrderPersistenceAdapterTest {
         assertThat(adapter.existsById(8L)).isFalse();
         verify(repository).existsById(7L);
     }
+
+    @Test
+    void should_find_all_and_delete() {
+        ServiceOrderEntity first = ServiceOrderEntity.builder()
+                .id(1L).clientId(1L).vehicleId(2L).branchId(3L).description("A")
+                .status(ServiceOrderStatus.PENDING).createdAt(NOW).updatedAt(NOW).build();
+        ServiceOrderEntity second = ServiceOrderEntity.builder()
+                .id(2L).clientId(1L).vehicleId(2L).branchId(3L).description("B")
+                .status(ServiceOrderStatus.APPROVED).createdAt(NOW).updatedAt(NOW).build();
+        when(repository.findAll()).thenReturn(java.util.List.of(first, second));
+
+        assertThat(adapter.findAll()).extracting(ServiceOrder::getId).containsExactly(1L, 2L);
+
+        adapter.deleteById(1L);
+        verify(repository).deleteById(1L);
+    }
 }

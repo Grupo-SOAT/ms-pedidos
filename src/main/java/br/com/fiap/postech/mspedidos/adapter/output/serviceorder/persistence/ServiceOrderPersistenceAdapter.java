@@ -5,6 +5,7 @@ import br.com.fiap.postech.mspedidos.port.persistence.ServiceOrderPersistencePor
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -27,6 +28,18 @@ public class ServiceOrderPersistenceAdapter implements ServiceOrderPersistencePo
     @Override
     public boolean existsById(Long id) {
         return repository.existsById(id);
+    }
+
+    @Override
+    public List<ServiceOrder> findAll() {
+        return repository.findAll().stream()
+                .map(ServiceOrderPersistenceAdapter::toDomain)
+                .toList();
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        repository.deleteById(id);
     }
 
     static ServiceOrderEntity toEntity(ServiceOrder order) {

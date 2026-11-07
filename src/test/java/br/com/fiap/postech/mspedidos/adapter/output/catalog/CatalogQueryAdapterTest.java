@@ -47,4 +47,14 @@ class CatalogQueryAdapterTest {
         assertThatThrownBy(() -> adapter.findById(9L))
                 .isInstanceOf(CatalogQueryAdapter.CatalogServiceNotFoundException.class);
     }
+
+    @Test
+    void should_map_not_found_to_catalog_exception() {
+        server.expect(requestTo("http://localhost:8080/catalog/services/99999"))
+                .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators
+                        .withStatus(org.springframework.http.HttpStatus.NOT_FOUND));
+
+        assertThatThrownBy(() -> adapter.findById(99999L))
+                .isInstanceOf(CatalogQueryAdapter.CatalogServiceNotFoundException.class);
+    }
 }

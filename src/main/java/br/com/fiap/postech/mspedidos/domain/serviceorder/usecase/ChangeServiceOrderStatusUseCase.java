@@ -65,7 +65,9 @@ public class ChangeServiceOrderStatusUseCase {
 
         Instant now = Instant.now(clock);
         order.applyEstimatedAmount(totalAmount, now);
-        order.transitionTo(ServiceOrderStatus.AWAITING_APPROVAL, now);
+        if (order.getStatus() == ServiceOrderStatus.IN_INSPECTION) {
+            order.transitionTo(ServiceOrderStatus.AWAITING_APPROVAL, now);
+        }
         return persistencePort.save(order);
     }
 

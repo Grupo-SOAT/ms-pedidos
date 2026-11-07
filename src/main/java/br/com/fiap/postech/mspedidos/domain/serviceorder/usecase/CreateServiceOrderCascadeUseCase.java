@@ -39,6 +39,12 @@ public class CreateServiceOrderCascadeUseCase {
 
     public CascadeResult execute(ServiceOrderCascadeCommand command) {
         Objects.requireNonNull(command.branchId(), "branchId is required");
+        if (command.vehicleId() == null && command.vehicle() == null) {
+            throw new IllegalArgumentException("SERVICE_ORDER_VEHICLE_DATA_ABSENT");
+        }
+        if (command.ownerId() == null && command.owner() == null) {
+            throw new IllegalArgumentException("VEHICLE_OWNER_DATA_ABSENT");
+        }
 
         Long ownerId = command.owner() != null
                 ? registrationCommandPort.createOwner(command.owner())

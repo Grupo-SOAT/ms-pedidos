@@ -11,10 +11,10 @@ public class ServiceLine {
 
     private Long id;
     private final Long serviceOrderId;
-    private final Long catalogServiceId;
-    private final String catalogServiceName;
-    private final BigDecimal price;
-    private final String status;
+    private Long catalogServiceId;
+    private String catalogServiceName;
+    private BigDecimal price;
+    private String status;
     private final Instant createdAt;
     private Instant approvedAt;
     private Instant startedAt;
@@ -40,6 +40,9 @@ public class ServiceLine {
         Objects.requireNonNull(serviceOrderId, "serviceOrderId is required");
         Objects.requireNonNull(catalogServiceId, "catalogServiceId is required");
         Objects.requireNonNull(price, "price is required");
+        if (price.signum() < 0) {
+            throw new InvalidServiceLineException("INVALID_PRICE");
+        }
         return new ServiceLine(null, serviceOrderId, catalogServiceId, catalogServiceName, price,
                 "AWAITING_APPROVAL", now, null, null, null);
     }
@@ -50,6 +53,79 @@ public class ServiceLine {
                                       Instant completedAt) {
         return new ServiceLine(id, serviceOrderId, catalogServiceId, catalogServiceName, price,
                 status, createdAt, approvedAt, startedAt, completedAt);
+    }
+
+    public void updateDetails(Long catalogServiceId, String catalogServiceName, BigDecimal price) {
+        if (catalogServiceId != null) {
+            this.catalogServiceId = catalogServiceId;
+        }
+        if (catalogServiceName != null) {
+            this.catalogServiceName = catalogServiceName;
+        }
+        if (price != null) {
+            if (price.signum() < 0) {
+                throw new InvalidServiceLineException("INVALID_PRICE");
+            }
+            this.price = price;
+        }
+    }
+
+    public void approve(Instant now) {
+        transitionTo("APPROVED", now);
+        this.approvedAt = now;
+    }
+
+    public void start(Instant now) {
+        transitionTo("IN_PROGRESS", now);
+        this.startedAt = now;
+    }
+
+    public void complete(Instant now) {
+        transitionTo("COMPLETED", now);
+        this.completedAt = now;
+    }
+
+    public void cancel(Instant now) {
+        transitionTo("CANCELLED", now);
+    }
+
+    public void moveTo(String target, Instant now) {
+        transitionTo(target, now);
+    }
+
+    private void transitionTo(String target, Instant now) {
+        if (target == null || target.equals(status)) {
+            return;
+        }
+        boolean allowed = switch (status) {
+            case "PENDING", "AWAITING_APPROVAL" -> target.equals("APPROVED") || target.equals("CANCELLED");
+            case "APPROVED" -> target.equals("IN_PROGRESS") || target.equals("CANCELLED");
+            case "IN_PROGRESS" -> target.equals("COMPLETED") || target.equals("CANCELLED");
+            default -> false;
+        };
+        if (!allowed) {
+            throw new InvalidServiceLineException("SERVICE_STATUS_CHANGE_NOT_ALLOWED");
+        }
+        this.status = target;
+        if ("APPROVED".equals(target)) {
+            this.approvedAt = now;
+        } else if ("IN_PROGRESS".equals(target)) {
+            this.startedAt = now;
+        } else if ("COMPLETED".equals(target)) {
+            this.completedAt = now;
+        }
+    }
+
+    public String getStatusLabel() {
+        return switch (status) {
+            case "PENDING" -> "Pendente";
+            case "AWAITING_APPROVAL" -> "Aguardando Aprovação";
+            case "APPROVED" -> "Aprovada";
+            case "IN_PROGRESS" -> "Em Andamento";
+            case "COMPLETED" -> "Finalizada";
+            case "CANCELLED" -> "Cancelada";
+            default -> status;
+        };
     }
 
     public void assignId(Long id) {
